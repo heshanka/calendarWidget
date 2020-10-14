@@ -1,1 +1,1 @@
-# calendarWidget
+# A calendar widget
