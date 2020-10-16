@@ -1,5 +1,5 @@
 # A calendar widget
 
-Still in progress.
+Messy code. Still in progress.
 
 ![](cal.gif)
