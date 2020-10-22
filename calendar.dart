@@ -28,51 +28,47 @@ class CustomCalendarState extends State<CustomCalendar>
   PageController pageController = PageController(initialPage: 0);
 
   static final Animatable<double> _easeInTween =
-      CurveTween(curve: Curves.easeIn);
+      CurveTween(curve: Curves.easeInOut);
 
   AnimationController _controller;
   Animation<double> _anim;
-
+  Animation<Color> _arrowColor;
   Animation<double> _iconTurns;
-  AnimationController _iconAnimcontroller;
-  static const Duration _kExpand = Duration(milliseconds: 200);
-  static final Animatable<double> _halfTween =
-      Tween<double>(begin: 0.0, end: 0.5);
+  Animation<Color> _monthColor;
+  AnimationController _monthController;
+
+  static const Duration _kExpand = Duration(milliseconds: 300);
+  static final Animatable<double> _halfTween = Tween<double>(begin: 0.0, end: 0.5);
   ValueChanged<bool> onExpansionChanged;
+  Animatable<Color> _arrowColorTween =
+      ColorTween(begin: Color(0x00FFA68A), end: Color(0xffFFA68A));
+  Animatable<Color> _monthColorTween =
+      ColorTween(begin: Color(0xffEC520B), end: Color(0x00EC520B));
 
   //TODO generate the row list only once please!!
   @override
   void initState() {
     _expanded = false;
     showDate = displayDate;
-    collapsedHeightFactor = 1 /
-        returnRowList(DateTime(displayDate.year, displayDate.month, 1)).length;
-    activeRowYPosition =
-        //is -0.9 the magic number
-        ((2 /
-                    (returnRowList(DateTime(
-                                displayDate.year, displayDate.month, 1))
-                            .length -
-                        1)) *
-                getActiveRow()) -
-            1;
-    _controller =
-        AnimationController(duration: Duration(milliseconds: 200), vsync: this);
+    List<Widget> rowListReturned = returnRowList(DateTime(displayDate.year, displayDate.month, 1));
+    collapsedHeightFactor = 1 / rowListReturned.length;
+    activeRowYPosition = ((2 / (rowListReturned.length - 1)) * getActiveRow()) - 1;
+    _controller = AnimationController(duration: _kExpand, vsync: this);
+    _monthController = AnimationController(duration: _kExpand, vsync: this);
     _anim = _controller.drive(_easeInTween);
-
+    _arrowColor = _controller.drive(_arrowColorTween.chain(_easeInTween));
     //icon stuff
-    _iconAnimcontroller = AnimationController(duration: _kExpand, vsync: this);
-    _iconTurns = _iconAnimcontroller.drive(_halfTween.chain(_easeInTween));
+    _iconTurns = _controller.drive(_halfTween.chain(_easeInTween));
+    _monthColor = _monthController.drive(_monthColorTween.chain(_easeInTween));
 
     //initial value = false
     _expanded = PageStorage.of(context)?.readState(context) ?? false;
-    if (_expanded) _iconAnimcontroller.value = 1.0;
+    if (_expanded) _controller.value = 1.0;
     calList = [
       Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           mainAxisSize: MainAxisSize.min,
-          children:
-              returnRowList(DateTime(displayDate.year, displayDate.month, 1)))
+          children: rowListReturned)
     ];
     super.initState();
   }
@@ -80,6 +76,7 @@ class CustomCalendarState extends State<CustomCalendar>
   @override
   void dispose() {
     _controller.dispose();
+    _monthController.dispose();
     super.dispose();
   }
 
@@ -105,23 +102,22 @@ class CustomCalendarState extends State<CustomCalendar>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Visibility(
-                        visible: _expanded,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(30),
-                            child: Container(
-                              width: 29,
-                              height: 29,
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: SvgPicture.asset(
-                                  'images/leftArrow.svg',
-                                ),
-                              ),
+                      Material(
+                        color: Colors.transparent,
+                        child: IconButton(
+                          enableFeedback: _expanded,
+                          splashRadius: _expanded ? 15.0 : 0.001,
+                          icon: AnimatedBuilder(
+                            animation: _arrowColor,
+                            builder: (BuildContext context, Widget child) =>
+                                SvgPicture.asset(
+                              'images/leftArrow.svg',
+                              color: _arrowColor.value,
                             ),
-                            onTap: () {
+                          ),
+                          onPressed: () {
+                            if (_expanded) {
+                              DateTime curr = showDate;
                               setState(() {
                                 calList = [
                                   Column(
@@ -132,20 +128,35 @@ class CustomCalendarState extends State<CustomCalendar>
                                           showDate.year,
                                           showDate.month - 1,
                                           1))),
-                                  calList[pageController.page.toInt()],
+                                  Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: returnRowList(DateTime(
+                                          showDate.year, showDate.month, 1))),
                                 ];
                                 print(calList.length);
                                 showDate = DateTime(
                                     showDate.year, showDate.month - 1, 1);
                               });
-
+                              if (areMonthsSame(curr, DateTime.now())) {
+                                _monthController.forward();
+                                Future.delayed(Duration(milliseconds: 1), () {
+                                  setState(() {});
+                                });
+                              } else if (areMonthsSame(
+                                  showDate, DateTime.now())) {
+                                _monthController.reverse();
+                                Future.delayed(_kExpand, () {
+                                  setState(() {});
+                                });
+                              }
                               pageController.jumpToPage(1);
 
                               pageController.previousPage(
-                                  duration: Duration(milliseconds: 200),
-                                  curve: Curves.easeInOut);
-                            },
-                          ),
+                                  duration: _kExpand, curve: Curves.easeInOut);
+                            }
+                          },
                         ),
                       ),
                       Text(formatDate(showDate),
@@ -153,26 +164,30 @@ class CustomCalendarState extends State<CustomCalendar>
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           )),
-                      Visibility(
-                        visible: _expanded,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(30),
-                            child: Container(
-                              width: 29,
-                              height: 29,
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: SvgPicture.asset(
-                                  'images/rightArrow.svg',
-                                ),
-                              ),
+                      Material(
+                        color: Colors.transparent,
+                        child: IconButton(
+                          enableFeedback: _expanded,
+                          splashRadius: _expanded ? 15.0 : 0.001,
+                          icon: AnimatedBuilder(
+                            animation: _arrowColor,
+                            builder: (BuildContext context, Widget child) =>
+                                SvgPicture.asset(
+                              'images/rightArrow.svg',
+                              color: _arrowColor.value,
                             ),
-                            onTap: () {
+                          ),
+                          onPressed: () {
+                            if (_expanded) {
+                              DateTime curr = showDate;
                               setState(() {
                                 calList = [
-                                  calList[pageController.page.toInt()],
+                                  Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: returnRowList(DateTime(
+                                          showDate.year, showDate.month, 1))),
                                   Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceEvenly,
@@ -186,12 +201,24 @@ class CustomCalendarState extends State<CustomCalendar>
                                 showDate = DateTime(
                                     showDate.year, showDate.month + 1, 1);
                               });
+
+                              if (areMonthsSame(curr, DateTime.now())) {
+                                _monthController.forward();
+                                Future.delayed(Duration(milliseconds: 1), () {
+                                  setState(() {});
+                                });
+                              } else if (areMonthsSame(
+                                  showDate, DateTime.now())) {
+                                _monthController.reverse();
+                                Future.delayed(_kExpand, () {
+                                  setState(() {});
+                                });
+                              }
                               pageController.jumpToPage(0);
                               pageController.nextPage(
-                                  duration: Duration(milliseconds: 200),
-                                  curve: Curves.easeInOut);
-                            },
-                          ),
+                                  duration: _kExpand, curve: Curves.easeInOut);
+                            }
+                          },
                         ),
                       ),
                     ],
@@ -213,6 +240,7 @@ class CustomCalendarState extends State<CustomCalendar>
                         controller: pageController,
                         scrollDirection: Axis.horizontal,
                         children: calList,
+                        physics: NeverScrollableScrollPhysics(),
                       ),
                     ),
                   ),
@@ -221,18 +249,19 @@ class CustomCalendarState extends State<CustomCalendar>
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.only(top: 10.0),
-          child: InkWell(
-            onTap: () {
-              _handleTap();
-            },
-            child: RotationTransition(
+        IconButton(
+          splashRadius: _monthController.view.value == 0.0 ? 18.0 : 0.001,
+          onPressed: _monthController.view.value == 0.0 ? _handleTap : null,
+          enableFeedback: _monthController.view.value == 0.0,
+          icon: AnimatedBuilder(
+            animation: _monthColor,
+            builder: (BuildContext context, Widget child) =>
+                RotationTransition(
               turns: _iconTurns,
-              child: const Icon(
+              child: Icon(
                 Icons.expand_more,
                 size: 35,
-                color: Color(0xffEC520B),
+                color: _monthColor.value,
               ),
             ),
           ),
@@ -248,7 +277,6 @@ class CustomCalendarState extends State<CustomCalendar>
       _expanded = !_expanded;
       if (_expanded) {
         _controller.forward();
-        _iconAnimcontroller.forward();
       } else {
         _controller.reverse().then<void>((void value) {
           if (!mounted) return;
@@ -256,7 +284,6 @@ class CustomCalendarState extends State<CustomCalendar>
             // Rebuild without widget.children.
           });
         });
-        _iconAnimcontroller.reverse();
       }
       PageStorage.of(context)?.writeState(context, _expanded);
     });
@@ -358,11 +385,18 @@ class CustomCalendarState extends State<CustomCalendar>
               child: Center(
                 child: Text(
                   rowValueList[i][j].toString(),
-                  style: rowValueList[i][j] == DateTime.now().day &&
+                  style: (rowValueList[i][j] == DateTime.now().day &&
                           start.month == DateTime.now().month &&
-                          start.year == DateTime.now().year
-                      ? TextStyle(fontWeight: FontWeight.bold)
-                      : TextStyle(fontWeight: FontWeight.normal),
+                          start.year == DateTime.now().year)
+                      ? TextStyle(
+                          fontWeight: FontWeight.bold,
+                        )
+                      : TextStyle(
+                          fontWeight: FontWeight.normal,
+                          color: ((i == 0 && rowValueList[i][j] > 7) ||
+                                  (i >= 4 && rowValueList[i][j] < 7))
+                              ? Colors.grey
+                              : Colors.black),
                   textAlign: TextAlign.center,
                 ),
               )),
@@ -386,5 +420,17 @@ class CustomCalendarState extends State<CustomCalendar>
       day,
       style: TextStyle(fontSize: 11, color: Color(0xff828282)),
     );
+  }
+
+  bool areDaysSame(DateTime a, DateTime b) {
+    return areMonthsSame(a, b) && a.day == b.day;
+  }
+
+  bool areMonthsSame(DateTime a, DateTime b) {
+    return areYearsSame(a, b) && a.month == b.month;
+  }
+
+  bool areYearsSame(DateTime a, DateTime b) {
+    return a.year == b.year;
   }
 }
