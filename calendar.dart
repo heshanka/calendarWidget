@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 
-//list of rows, activerow,
-//add collapse
-//offset + currentday
-
 class CustomCalendar extends StatefulWidget {
   @override
   CustomCalendarState createState() => CustomCalendarState();
@@ -13,57 +9,99 @@ class CustomCalendar extends StatefulWidget {
 
 class CustomCalendarState extends State<CustomCalendar>
     with TickerProviderStateMixin {
-  //func is "a * (w-v) + v"
-  // v is base value
-  // w is final value
 
+  /// Boolean to handle calendar expansion
   bool _expanded;
+
+  /// The height of an individual week row
   double collapsedHeightFactor;
+
+  /// The y coordinate of the active week row
   double activeRowYPosition;
+
+  /// The date var that handles the changing months on click
   DateTime displayDate =
       DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+
+  /// The date that is shown as Month , Year between the arrows
   DateTime showDate;
+
+  /// The row that contains the current week withing the list of rows generated
   int activeRow;
+
+  /// The list that stores the week rows of the month
   List<Widget> calList;
+
+  /// PageController to handle the changing month views on click
   PageController pageController = PageController(initialPage: 0);
 
   static final Animatable<double> _easeInTween =
       CurveTween(curve: Curves.easeInOut);
 
+  /// Animation controller that handles the calendar expansion event and the 
+  /// expand_more icon rotation event
   AnimationController _controller;
-  Animation<double> _anim;
-  Animation<Color> _arrowColor;
-  Animation<double> _iconTurns;
-  Animation<Color> _monthColor;
+
+  /// Animation controller that handles the expand_more icon fading in/out event 
+  /// based on if the current month is being displayed 
   AnimationController _monthController;
 
+  /// The animation for the changing height with the y coordinates in calendar expansion
+  Animation<double> _anim;
+
+  /// Color animation for the -> and <- arrows that change the month view
+  Animation<Color> _arrowColor;
+
+  /// Animation for the rotating expand_more/less icon
+  Animation<double> _iconTurns;
+
+  /// Color animation for the ^ arrow that handles expansion of view
+  Animation<Color> _monthColor;
+
+  /// Animation duration
   static const Duration _kExpand = Duration(milliseconds: 300);
+
   static final Animatable<double> _halfTween = Tween<double>(begin: 0.0, end: 0.5);
+  
+  // Boolean to handle what to do when calendar is expanded or contracted
   ValueChanged<bool> onExpansionChanged;
+
+  /// Color tween for -> and <- icons
   Animatable<Color> _arrowColorTween =
       ColorTween(begin: Color(0x00FFA68A), end: Color(0xffFFA68A));
+
+  /// Color tween for expand_less icon
   Animatable<Color> _monthColorTween =
       ColorTween(begin: Color(0xffEC520B), end: Color(0x00EC520B));
 
-  //TODO generate the row list only once please!!
   @override
   void initState() {
+    // calendar is not expanded initially
     _expanded = false;
     showDate = displayDate;
+
+    // [returnRowList] called and stored in [rowListReturned] to make use of in the next occurrences
     List<Widget> rowListReturned = returnRowList(DateTime(displayDate.year, displayDate.month, 1));
+    
+    //Determine the height of one week row
     collapsedHeightFactor = 1 / rowListReturned.length;
+
+    //Determine the y coordinate of the current week row with this formula
     activeRowYPosition = ((2 / (rowListReturned.length - 1)) * getActiveRow()) - 1;
+
+    //Initialize animation controllers
     _controller = AnimationController(duration: _kExpand, vsync: this);
     _monthController = AnimationController(duration: _kExpand, vsync: this);
     _anim = _controller.drive(_easeInTween);
     _arrowColor = _controller.drive(_arrowColorTween.chain(_easeInTween));
-    //icon stuff
     _iconTurns = _controller.drive(_halfTween.chain(_easeInTween));
     _monthColor = _monthController.drive(_monthColorTween.chain(_easeInTween));
 
     //initial value = false
     _expanded = PageStorage.of(context)?.readState(context) ?? false;
     if (_expanded) _controller.value = 1.0;
+
+    //calList contains the list of week Rows of the displayed month
     calList = [
       Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -119,6 +157,7 @@ class CustomCalendarState extends State<CustomCalendar>
                             if (_expanded) {
                               DateTime curr = showDate;
                               setState(() {
+                                //set calList to previous month to showDate and showDate
                                 calList = [
                                   Column(
                                       mainAxisAlignment:
@@ -135,10 +174,12 @@ class CustomCalendarState extends State<CustomCalendar>
                                       children: returnRowList(DateTime(
                                           showDate.year, showDate.month, 1))),
                                 ];
-                                print(calList.length);
+                                //Decrement the showDate by 1 month
                                 showDate = DateTime(
                                     showDate.year, showDate.month - 1, 1);
                               });
+
+                              //Fade in/out the expand icon if current month is not displayed month
                               if (areMonthsSame(curr, DateTime.now())) {
                                 _monthController.forward();
                                 Future.delayed(Duration(milliseconds: 1), () {
@@ -152,13 +193,13 @@ class CustomCalendarState extends State<CustomCalendar>
                                 });
                               }
                               pageController.jumpToPage(1);
-
                               pageController.previousPage(
                                   duration: _kExpand, curve: Curves.easeInOut);
                             }
                           },
                         ),
                       ),
+                      // Displayed Month, Displayed Year
                       Text(formatDate(showDate),
                           style: TextStyle(
                             fontSize: 14,
@@ -181,6 +222,7 @@ class CustomCalendarState extends State<CustomCalendar>
                             if (_expanded) {
                               DateTime curr = showDate;
                               setState(() {
+                                //set calList to showDate and showDate incremented by 1 month
                                 calList = [
                                   Column(
                                       mainAxisAlignment:
@@ -197,11 +239,12 @@ class CustomCalendarState extends State<CustomCalendar>
                                           showDate.month + 1,
                                           1))),
                                 ];
-                                print(calList.length);
+                                //Increment showDate by a month
                                 showDate = DateTime(
                                     showDate.year, showDate.month + 1, 1);
                               });
-
+                              
+                              //Fade in/out the expand icon if current month is not displayed month
                               if (areMonthsSame(curr, DateTime.now())) {
                                 _monthController.forward();
                                 Future.delayed(Duration(milliseconds: 1), () {
@@ -240,6 +283,7 @@ class CustomCalendarState extends State<CustomCalendar>
                         controller: pageController,
                         scrollDirection: Axis.horizontal,
                         children: calList,
+                        //the pageview is not swipable as this affects the changing months
                         physics: NeverScrollableScrollPhysics(),
                       ),
                     ),
@@ -250,7 +294,9 @@ class CustomCalendarState extends State<CustomCalendar>
           ),
         ),
         IconButton(
+          //The splash effect is only visible when the animation has been completed
           splashRadius: _monthController.view.value == 0.0 ? 18.0 : 0.001,
+          //[handleTap] only works when the animation has been completed
           onPressed: _monthController.view.value == 0.0 ? _handleTap : null,
           enableFeedback: _monthController.view.value == 0.0,
           icon: AnimatedBuilder(
@@ -270,8 +316,10 @@ class CustomCalendarState extends State<CustomCalendar>
     );
   }
 
+  //Format the received date into full month and year format
   String formatDate(DateTime date) => new DateFormat("MMMM yyyy").format(date);
 
+  // Used to handle calendar expansion and icon rotation events 
   void _handleTap() {
     setState(() {
       _expanded = !_expanded;
@@ -290,9 +338,10 @@ class CustomCalendarState extends State<CustomCalendar>
     if (onExpansionChanged != null) onExpansionChanged(_expanded);
   }
 
+  //Get the current week row from the list of all the rows per current month
   int getActiveRow() {
     List<List<int>> rowValueList =
-        generateCurrentMonth(DateTime(displayDate.year, displayDate.month, 1));
+        generateMonth(DateTime(displayDate.year, displayDate.month, 1));
     for (int i = 0; i < rowValueList.length; i++) {
       if (displayDate.month == DateTime.now().month &&
           rowValueList[i].contains(DateTime.now().day)) {
@@ -302,11 +351,11 @@ class CustomCalendarState extends State<CustomCalendar>
     return activeRow;
   }
 
-  List<List<int>> generateCurrentMonth(DateTime firstOfMonth) {
-    //int numDaysCurrentMonth = DateTime(DateTime.now().year, DateTime.now().month + 1, 0).day;
+  ///Generate a month given the start date of month as a list of list of integers
+  /// e.g. [[30, 1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12, 13],..]. Weeks start
+  /// from Monday.
+  List<List<int>> generateMonth(DateTime firstOfMonth) {
     List<List<int>> rowValueList = [];
-
-    //DateTime firstOfMonth =  DateTime(displayyDate.year, displayyDate.month, 1);
 
     //Adding the first week
     DateTime endWeek =
@@ -348,6 +397,7 @@ class CustomCalendarState extends State<CustomCalendar>
     return rowValueList;
   }
 
+  // Returns a list of Rows containing the weeks of a month
   List<Widget> returnRowList(DateTime start) {
     List<Widget> rowList = <Widget>[
       Padding(
@@ -367,7 +417,7 @@ class CustomCalendarState extends State<CustomCalendar>
         ),
       ),
     ];
-    List<List<int>> rowValueList = generateCurrentMonth(start);
+    List<List<int>> rowValueList = generateMonth(start);
     for (int i = 0; i < rowValueList.length; i++) {
       List<Widget> itemList = [];
       for (int j = 0; j < rowValueList[i].length; j++) {
@@ -391,6 +441,7 @@ class CustomCalendarState extends State<CustomCalendar>
                       ? TextStyle(
                           fontWeight: FontWeight.bold,
                         )
+                      //Grey out the previous month's and next month's values or dates
                       : TextStyle(
                           fontWeight: FontWeight.normal,
                           color: ((i == 0 && rowValueList[i][j] > 7) ||
@@ -415,6 +466,7 @@ class CustomCalendarState extends State<CustomCalendar>
     return rowList;
   }
 
+  //Return a Text with Style according to input String, used for the days
   Widget calendarWeekday(String day) {
     return Text(
       day,
@@ -422,6 +474,7 @@ class CustomCalendarState extends State<CustomCalendar>
     );
   }
 
+  // Utility functions to compare Dates:
   bool areDaysSame(DateTime a, DateTime b) {
     return areMonthsSame(a, b) && a.day == b.day;
   }
@@ -434,3 +487,4 @@ class CustomCalendarState extends State<CustomCalendar>
     return a.year == b.year;
   }
 }
+
