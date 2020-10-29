@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
-import '../../utils/global.dart';
+
+const double pWidth = 392.7;
 
 class CustomCalendar extends StatefulWidget {
   @override
