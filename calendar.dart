@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
+import '../../utils/global.dart';
 
 class CustomCalendar extends StatefulWidget {
   @override
@@ -40,6 +41,7 @@ class CustomCalendarState extends State<CustomCalendar>
 
   /// Animation controller that handles the calendar expansion event and the 
   /// expand_more icon rotation event
+  /// 
   AnimationController _controller;
 
   /// Animation controller that handles the expand_more icon fading in/out event 
@@ -73,6 +75,7 @@ class CustomCalendarState extends State<CustomCalendar>
   /// Color tween for expand_less icon
   Animatable<Color> _monthColorTween =
       ColorTween(begin: Color(0xffEC520B), end: Color(0x00EC520B));
+
 
   @override
   void initState() {
@@ -120,6 +123,7 @@ class CustomCalendarState extends State<CustomCalendar>
 
   @override
   Widget build(BuildContext context) {
+    double scaleFactor = MediaQuery.of(context).size.width / pWidth;
     double calendarWidth = MediaQuery.of(context).size.width * 0.85;
 
     return Column(
@@ -135,8 +139,8 @@ class CustomCalendarState extends State<CustomCalendar>
                 width: MediaQuery.of(context).size.width / 1.1,
                 height: 50,
                 child: Padding(
-                  padding: const EdgeInsets.only(
-                      top: 13, bottom: 8, left: 16, right: 16),
+                  padding: EdgeInsets.only(
+                      top: 13*scaleFactor, bottom: 8*scaleFactor, left: 16*scaleFactor, right: 16*scaleFactor),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -204,7 +208,9 @@ class CustomCalendarState extends State<CustomCalendar>
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                          )),
+                          ),
+                        textScaleFactor: scaleFactor,
+                      ),
                       Material(
                         color: Colors.transparent,
                         child: IconButton(
@@ -306,7 +312,7 @@ class CustomCalendarState extends State<CustomCalendar>
               turns: _iconTurns,
               child: Icon(
                 Icons.expand_more,
-                size: 35,
+                size: 35*scaleFactor,
                 color: _monthColor.value,
               ),
             ),
@@ -402,7 +408,7 @@ class CustomCalendarState extends State<CustomCalendar>
     List<Widget> rowList = <Widget>[
       Padding(
         //do not change this padding
-        padding: const EdgeInsets.only(bottom: 22, left: 36, right: 36),
+        padding: EdgeInsets.only(bottom: 22, left: 36, right: 36,),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
@@ -429,7 +435,9 @@ class CustomCalendarState extends State<CustomCalendar>
                   shape: BoxShape.circle,
                   color: rowValueList[i][j] == DateTime.now().day &&
                           start.month == DateTime.now().month &&
-                          start.year == DateTime.now().year
+                          start.year == DateTime.now().year &&
+                      !((i == 0 && rowValueList[i][j] > 7) ||
+                          (i >= 4 && rowValueList[i][j] < 7))
                       ? Color(0xffFFA68A)
                       : Colors.transparent),
               child: Center(
@@ -437,7 +445,8 @@ class CustomCalendarState extends State<CustomCalendar>
                   rowValueList[i][j].toString(),
                   style: (rowValueList[i][j] == DateTime.now().day &&
                           start.month == DateTime.now().month &&
-                          start.year == DateTime.now().year)
+                          start.year == DateTime.now().year) &&
+                          !((i == 0 && rowValueList[i][j] > 7) || (i >= 4 && rowValueList[i][j] < 7))
                       ? TextStyle(
                           fontWeight: FontWeight.bold,
                         )
