@@ -346,14 +346,15 @@ class CustomCalendarState extends State<CustomCalendar>
   }
 
   //Get the current week row from the list of all the rows per current month
-  int getActiveRow() {
-    List<List<int>> rowValueList =
-        generateMonth(DateTime(displayDate.year, displayDate.month, 1));
+ int getActiveRow() {
+    List<List<int>> rowValueList = generateMonth(DateTime(displayDate.year, displayDate.month, 1));
     for (int i = 0; i < rowValueList.length; i++) {
+      for(int j = i; j < rowValueList[i].length ; j++){
       if (displayDate.month == DateTime.now().month &&
-          rowValueList[i].contains(DateTime.now().day)) {
+          rowValueList[i].contains(DateTime.now().day) && 
+          ((i <= 1 && rowValueList[i][j] <= 14) || (i >= 4 && rowValueList[i][j] > 7))) {
         activeRow = i + 1;
-      }
+      }}
     }
     return activeRow;
   }
@@ -392,6 +393,7 @@ class CustomCalendarState extends State<CustomCalendar>
     }
 
     //Adding the last week
+    if(endWeek.day < 7) {
     List<int> last = [];
     startWeek = endWeek.subtract(Duration(days: 6));
     for (DateTime j = startWeek;
@@ -400,6 +402,7 @@ class CustomCalendarState extends State<CustomCalendar>
       last.add(j.day);
     }
     rowValueList.add(last);
+    }
     //print(rowValueList);
     return rowValueList;
   }
