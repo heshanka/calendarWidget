@@ -352,11 +352,27 @@ class CustomCalendarState extends State<CustomCalendar>
       for(int j = i; j < rowValueList[i].length ; j++){
       if (displayDate.month == DateTime.now().month &&
           rowValueList[i].contains(DateTime.now().day) && 
-          ((i <= 1 && rowValueList[i][j] <= 14) || (i >= 4 && rowValueList[i][j] > 7))) {
+          monthChecks(i, rowValueList[i][j])){
         activeRow = i + 1;
       }}
     }
     return activeRow;
+  }
+  
+    //checks to ensure that the dates used to generate active row dont use prev. or next. month's dates
+  bool monthChecks(int i, int value){
+    if(i <= 1 && value <= 14){
+      return true;
+    }
+    else if(i >= 4 && value > 7){
+      return true;
+    }
+    else if(i < 4 || i > 1){
+      return true;
+    }
+    else{
+      return false;
+    }
   }
 
   ///Generate a month given the start date of month as a list of list of integers
