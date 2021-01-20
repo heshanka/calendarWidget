@@ -1,7 +1,6 @@
 # A calendar widget
 
-In progress.
-
 A custom animated Calendar widget using Dart.
 
+**Note: assets are not included 
 ![](cal.gif)
