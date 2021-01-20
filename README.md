@@ -4,4 +4,4 @@ In progress.
 
 A custom animated Calendar widget using Dart.
 
-![](calendar_resized.gif)
+![](cal.gif)
