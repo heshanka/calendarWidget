@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:intl/intl.dart';
 
 const double pWidth = 392.7;
@@ -23,7 +22,7 @@ class CustomCalendarState extends State<CustomCalendar>
 
   /// The date var that handles the changing months on click
   DateTime displayDate =
-      DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+  DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
 
   /// The date that is shown as Month , Year between the arrows
   DateTime showDate;
@@ -38,15 +37,15 @@ class CustomCalendarState extends State<CustomCalendar>
   PageController pageController = PageController(initialPage: 0);
 
   static final Animatable<double> _easeInTween =
-      CurveTween(curve: Curves.easeInOut);
+  CurveTween(curve: Curves.easeInOut);
 
-  /// Animation controller that handles the calendar expansion event and the 
+  /// Animation controller that handles the calendar expansion event and the
   /// expand_more icon rotation event
-  /// 
+  ///
   AnimationController _controller;
 
-  /// Animation controller that handles the expand_more icon fading in/out event 
-  /// based on if the current month is being displayed 
+  /// Animation controller that handles the expand_more icon fading in/out event
+  /// based on if the current month is being displayed
   AnimationController _monthController;
 
   /// The animation for the changing height with the y coordinates in calendar expansion
@@ -65,17 +64,17 @@ class CustomCalendarState extends State<CustomCalendar>
   static const Duration _kExpand = Duration(milliseconds: 300);
 
   static final Animatable<double> _halfTween = Tween<double>(begin: 0.0, end: 0.5);
-  
+
   // Boolean to handle what to do when calendar is expanded or contracted
   ValueChanged<bool> onExpansionChanged;
 
   /// Color tween for -> and <- icons
   Animatable<Color> _arrowColorTween =
-      ColorTween(begin: Color(0x00FFA68A), end: Color(0xffFFA68A));
+  ColorTween(begin: Color(0x00FFA68A), end: Color(0xffFFA68A));
 
   /// Color tween for expand_less icon
   Animatable<Color> _monthColorTween =
-      ColorTween(begin: Color(0xffEC520B), end: Color(0x00EC520B));
+  ColorTween(begin: Color(0xffEC520B), end: Color(0x00EC520B));
 
 
   @override
@@ -86,7 +85,7 @@ class CustomCalendarState extends State<CustomCalendar>
 
     // [returnRowList] called and stored in [rowListReturned] to make use of in the next occurrences
     List<Widget> rowListReturned = returnRowList(DateTime(displayDate.year, displayDate.month, 1));
-    
+
     //Determine the height of one week row
     collapsedHeightFactor = 1 / rowListReturned.length;
 
@@ -153,10 +152,11 @@ class CustomCalendarState extends State<CustomCalendar>
                           icon: AnimatedBuilder(
                             animation: _arrowColor,
                             builder: (BuildContext context, Widget child) =>
-                                SvgPicture.asset(
-                              'images/leftArrow.svg',
-                              color: _arrowColor.value,
-                            ),
+                                Icon(
+                                  Icons.arrow_back_ios_sharp,
+                                  size: 20*scaleFactor,
+                                  color: _arrowColor.value,
+                                ),
                           ),
                           onPressed: () {
                             if (_expanded) {
@@ -166,7 +166,7 @@ class CustomCalendarState extends State<CustomCalendar>
                                 calList = [
                                   Column(
                                       mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
+                                      MainAxisAlignment.spaceEvenly,
                                       mainAxisSize: MainAxisSize.min,
                                       children: returnRowList(DateTime(
                                           showDate.year,
@@ -174,7 +174,7 @@ class CustomCalendarState extends State<CustomCalendar>
                                           1))),
                                   Column(
                                       mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
+                                      MainAxisAlignment.spaceEvenly,
                                       mainAxisSize: MainAxisSize.min,
                                       children: returnRowList(DateTime(
                                           showDate.year, showDate.month, 1))),
@@ -206,10 +206,10 @@ class CustomCalendarState extends State<CustomCalendar>
                       ),
                       // Displayed Month, Displayed Year
                       Text(formatDate(showDate),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
                         textScaleFactor: scaleFactor,
                       ),
                       Material(
@@ -220,10 +220,11 @@ class CustomCalendarState extends State<CustomCalendar>
                           icon: AnimatedBuilder(
                             animation: _arrowColor,
                             builder: (BuildContext context, Widget child) =>
-                                SvgPicture.asset(
-                              'images/rightArrow.svg',
-                              color: _arrowColor.value,
-                            ),
+                                Icon(
+                                  Icons.arrow_forward_ios_sharp,
+                                  size: 20*scaleFactor,
+                                  color: _arrowColor.value,
+                                ),
                           ),
                           onPressed: () {
                             if (_expanded) {
@@ -233,13 +234,13 @@ class CustomCalendarState extends State<CustomCalendar>
                                 calList = [
                                   Column(
                                       mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
+                                      MainAxisAlignment.spaceEvenly,
                                       mainAxisSize: MainAxisSize.min,
                                       children: returnRowList(DateTime(
                                           showDate.year, showDate.month, 1))),
                                   Column(
                                       mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
+                                      MainAxisAlignment.spaceEvenly,
                                       mainAxisSize: MainAxisSize.min,
                                       children: returnRowList(DateTime(
                                           showDate.year,
@@ -250,7 +251,7 @@ class CustomCalendarState extends State<CustomCalendar>
                                 showDate = DateTime(
                                     showDate.year, showDate.month + 1, 1);
                               });
-                              
+
                               //Fade in/out the expand icon if current month is not displayed month
                               if (areMonthsSame(curr, DateTime.now())) {
                                 _monthController.forward();
@@ -279,23 +280,23 @@ class CustomCalendarState extends State<CustomCalendar>
                 animation: _controller.view,
                 builder: (BuildContext context, Widget child) => Container(
                     child: ClipRect(
-                  child: Align(
-                    alignment: Alignment(0.5, activeRowYPosition),
-                    heightFactor: _anim.value * (1 - collapsedHeightFactor) +
-                        collapsedHeightFactor,
-                    child: Container(
-                      width: calendarWidth,
-                      height: calendarWidth * 0.76,
-                      child: PageView(
-                        controller: pageController,
-                        scrollDirection: Axis.horizontal,
-                        children: calList,
-                        //the pageview is not swipable as this affects the changing months
-                        physics: NeverScrollableScrollPhysics(),
+                      child: Align(
+                        alignment: Alignment(0.5, activeRowYPosition),
+                        heightFactor: _anim.value * (1 - collapsedHeightFactor) +
+                            collapsedHeightFactor,
+                        child: Container(
+                          width: calendarWidth,
+                          height: calendarWidth * 0.76,
+                          child: PageView(
+                            controller: pageController,
+                            scrollDirection: Axis.horizontal,
+                            children: calList,
+                            //the pageview is not swipable as this affects the changing months
+                            physics: NeverScrollableScrollPhysics(),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                )),
+                    )),
               )
             ],
           ),
@@ -310,13 +311,13 @@ class CustomCalendarState extends State<CustomCalendar>
             animation: _monthColor,
             builder: (BuildContext context, Widget child) =>
                 RotationTransition(
-              turns: _iconTurns,
-              child: Icon(
-                Icons.expand_more,
-                size: 35*scaleFactor,
-                color: _monthColor.value,
-              ),
-            ),
+                  turns: _iconTurns,
+                  child: Icon(
+                    Icons.expand_more,
+                    size: 35*scaleFactor,
+                    color: _monthColor.value,
+                  ),
+                ),
           ),
         ),
       ],
@@ -326,7 +327,7 @@ class CustomCalendarState extends State<CustomCalendar>
   //Format the received date into full month and year format
   String formatDate(DateTime date) => new DateFormat("MMMM yyyy").format(date);
 
-  // Used to handle calendar expansion and icon rotation events 
+  // Used to handle calendar expansion and icon rotation events
   void _handleTap() {
     setState(() {
       _expanded = !_expanded;
@@ -346,20 +347,20 @@ class CustomCalendarState extends State<CustomCalendar>
   }
 
   //Get the current week row from the list of all the rows per current month
- int getActiveRow() {
+  int getActiveRow() {
     List<List<int>> rowValueList = generateMonth(DateTime(displayDate.year, displayDate.month, 1));
     for (int i = 0; i < rowValueList.length; i++) {
       for(int j = i; j < rowValueList[i].length ; j++){
-      if (displayDate.month == DateTime.now().month &&
-          rowValueList[i].contains(DateTime.now().day) && 
-          monthChecks(i, rowValueList[i][j])){
-        activeRow = i + 1;
-      }}
+        if (displayDate.month == DateTime.now().month &&
+            rowValueList[i].contains(DateTime.now().day) &&
+            monthChecks(i, rowValueList[i][j])){
+          activeRow = i + 1;
+        }}
     }
     return activeRow;
   }
-  
-    //checks to ensure that the dates used to generate active row dont use prev. or next. month's dates
+
+  //checks to ensure that the dates used to generate active row dont use prev. or next. month's dates
   bool monthChecks(int i, int value){
     if(i <= 1 && value <= 14){
       return true;
@@ -383,12 +384,12 @@ class CustomCalendarState extends State<CustomCalendar>
 
     //Adding the first week
     DateTime endWeek =
-        firstOfMonth.add(Duration(days: 7 - firstOfMonth.weekday));
+    firstOfMonth.add(Duration(days: 7 - firstOfMonth.weekday));
     DateTime startWeek = endWeek.subtract(Duration(days: 6));
     List<int> first = [];
     for (DateTime j = startWeek;
-        j.compareTo(endWeek) <= 0;
-        j = j.add(Duration(days: 1))) {
+    j.compareTo(endWeek) <= 0;
+    j = j.add(Duration(days: 1))) {
       first.add(j.day);
     }
     rowValueList.add(first);
@@ -410,14 +411,14 @@ class CustomCalendarState extends State<CustomCalendar>
 
     //Adding the last week
     if(endWeek.day < 7) {
-    List<int> last = [];
-    startWeek = endWeek.subtract(Duration(days: 6));
-    for (DateTime j = startWeek;
-        j.compareTo(endWeek) <= 0;
-        j = j.add(Duration(days: 1))) {
-      last.add(j.day);
-    }
-    rowValueList.add(last);
+      List<int> last = [];
+      startWeek = endWeek.subtract(Duration(days: 6));
+      for (DateTime j = startWeek;
+      j.compareTo(endWeek) <= 0;
+      j = j.add(Duration(days: 1))) {
+        last.add(j.day);
+      }
+      rowValueList.add(last);
     }
     //print(rowValueList);
     return rowValueList;
@@ -454,8 +455,8 @@ class CustomCalendarState extends State<CustomCalendar>
               decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: rowValueList[i][j] == DateTime.now().day &&
-                          start.month == DateTime.now().month &&
-                          start.year == DateTime.now().year &&
+                      start.month == DateTime.now().month &&
+                      start.year == DateTime.now().year &&
                       !((i == 0 && rowValueList[i][j] > 7) ||
                           (i >= 4 && rowValueList[i][j] < 7))
                       ? Color(0xffFFA68A)
@@ -464,26 +465,26 @@ class CustomCalendarState extends State<CustomCalendar>
                 child: Text(
                   rowValueList[i][j].toString(),
                   style: (rowValueList[i][j] == DateTime.now().day &&
-                          start.month == DateTime.now().month &&
-                          start.year == DateTime.now().year) &&
-                          !((i == 0 && rowValueList[i][j] > 7) || (i >= 4 && rowValueList[i][j] < 7))
+                      start.month == DateTime.now().month &&
+                      start.year == DateTime.now().year) &&
+                      !((i == 0 && rowValueList[i][j] > 7) || (i >= 4 && rowValueList[i][j] < 7))
                       ? TextStyle(
-                          fontWeight: FontWeight.bold,
-                        )
-                      //Grey out the previous month's and next month's values or dates
+                    fontWeight: FontWeight.bold,
+                  )
+                  //Grey out the previous month's and next month's values or dates
                       : TextStyle(
-                          fontWeight: FontWeight.normal,
-                          color: ((i == 0 && rowValueList[i][j] > 7) ||
-                                  (i >= 4 && rowValueList[i][j] < 7))
-                              ? Colors.grey
-                              : Colors.black),
+                      fontWeight: FontWeight.normal,
+                      color: ((i == 0 && rowValueList[i][j] > 7) ||
+                          (i >= 4 && rowValueList[i][j] < 7))
+                          ? Colors.grey
+                          : Colors.black),
                   textAlign: TextAlign.center,
                 ),
               )),
         ));
       }
       Widget temp = Padding(
-          //this padding seems important
+        //this padding seems important
           padding: EdgeInsets.only(bottom: 12, left: 36, right: 36),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -516,4 +517,3 @@ class CustomCalendarState extends State<CustomCalendar>
     return a.year == b.year;
   }
 }
-
